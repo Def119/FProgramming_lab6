@@ -1,8 +1,10 @@
+
+import scala.collection.mutable
 case class Product(pid:String ,name:String ,quantity:Int ,unitprice: Int)
 
 @main def main() ={
    val products = Map("001"-> Product("001","Milk",20,400),"002"->Product("002","chocolate",100,110))
-   val inventory2 = Map("003"->Product("003","Samaposha",15,90),"002"->Product("002","chocolate",20,110))
+   val inventory2 = Map("003"->Product("003","Samaposha",15,90),"002"->Product("002","chocolate",20,130))
   
    println(retrieveProducts(products)) 
 
@@ -12,6 +14,9 @@ case class Product(pid:String ,name:String ,quantity:Int ,unitprice: Int)
 
 //check for a product using the product id:
    checkProduct(products,"002");
+
+   val newMap = mergeMaps(products,inventory2);
+   println(newMap);
 }
 
 def retrieveProducts(products : Map[String,Product]): List[String]={
@@ -40,3 +45,36 @@ def checkProduct(products:Map[String,Product],key: String):Unit={
         println("Inquired product does not exist\n")
     }
 }
+
+
+
+
+def mergeMaps(products1: Map[String, Product], products2: Map[String, Product]): Map[String, Product] = {
+  
+  val mergemap: mutable.Map[String, Product] = mutable.Map()
+
+  // Update with duplicate products
+  for ((pid, product) <- products1) {
+    if (products2.contains(pid)) {
+      val product2 = products2(pid)
+      val updatedProduct = product.copy(
+        quantity = product.quantity + product2.quantity,
+        unitprice = math.max(product.unitprice, product2.unitprice)
+      )
+      mergemap(pid) = updatedProduct
+    } else {
+      mergemap(pid) = product
+    }
+  }
+
+  // Add non repeating products
+  for ((pid, product) <- products2) {
+    if (!mergemap.contains(pid)) {
+      mergemap(pid) = product
+    }
+  }
+
+  // Convert the mutable map to an immutable map otherewise gives a return type error
+  mergemap.toMap
+}
+
